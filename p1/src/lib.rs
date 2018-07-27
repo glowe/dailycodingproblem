@@ -47,6 +47,7 @@ pub fn has_pair_with_sum_set(numbers: &[u32], k: u32) -> bool {
     false
 }
 
+#[cfg(test)]
 mod test {
     #[test]
     fn test_nested_loops() {
