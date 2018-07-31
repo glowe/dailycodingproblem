@@ -27,34 +27,50 @@ pub struct Node {
 impl Node {
     fn serialize(&self) -> String {
         let left_serialized = match &self.left {
-            None => String::from("nil"),
+            None => "?".to_string(),
             Some(left) => left.serialize(),
         };
         let right_serialized = match &self.right {
-            None => String::from("nil"),
+            None => "?".to_string(),
             Some(right) => right.serialize(),
         };
-        format!(
-            "(\"{}\" {} {})",
-            self.val, left_serialized, right_serialized
-        )
+        format!("\"{}\" {} {}", self.val, left_serialized, right_serialized)
     }
 
-    fn deserialize_rec(iter: &mut Peekable<Chars>) -> Result<Box<Self>, String> {
+    fn parse_node_rec(iter: &mut Peekable<Chars>) -> Result<Option<Box<Self>>, String> {
+        match iter.peek() {
+            Some(&'"') => match Self::parse_node(iter) {
+                Ok(node) => Ok(Some(node)),
+                Err(err) => return Err(err),
+            },
+            Some(&'?') => {
+                iter.next();
+                Ok(None)
+            }
+            Some(&c) => {
+                let rest: String = iter.collect();
+                return Err(format!(
+                    "Expected \" or ?, but encountered {} ({})",
+                    c, rest
+                ));
+            }
+            None => return Err("Expected \" or ?, but reached end of string instead".to_string()),
+        }
+    }
+
+    fn parse_node(iter: &mut Peekable<Chars>) -> Result<Box<Self>, String> {
         macro_rules! expect {
             ($expected:expr) => {
                 let c = iter.next();
                 if c != Some($expected) {
                     let rest: String = iter.collect();
                     return Err(format!(
-                        "Expected $expected, but encountered {:?} (rest: {}",
-                        c, rest
+                        "Expected {}, but encountered {:?} (rest: {}",
+                        $expected, c, rest
                     ));
                 }
             };
         }
-
-        expect!('(');
 
         expect!('"');
         let mut val: String = String::new();
@@ -62,46 +78,22 @@ impl Node {
             match iter.next() {
                 Some('"') => break,
                 Some(c) => val.push(c),
-                None => return Err(String::from("Reached end of string prematurely")),
+                None => return Err("Reached end of string prematurely".to_string()),
             }
         }
         expect!(' ');
 
-        let left: Option<Box<Self>>;
-        if iter.peek() == Some(&'(') {
-            let left_rec = Self::deserialize_rec(iter);
-            if left_rec.is_err() {
-                return left_rec;
-            }
-            left = Some(left_rec.unwrap());
-        } else if iter.peek() == Some(&'n') {
-            iter.next();
-            expect!('i');
-            expect!('l');
-            left = None;
-        } else {
-            return Err(String::from("Expected nil or ("));
-        }
+        let left = match Self::parse_node_rec(iter) {
+            Ok(node) => node,
+            Err(err) => return Err(err),
+        };
 
         expect!(' ');
 
-        let right: Option<Box<Self>>;
-        if iter.peek() == Some(&'(') {
-            let right_rec = Self::deserialize_rec(iter);
-            if right_rec.is_err() {
-                return right_rec;
-            }
-            right = Some(right_rec.unwrap());
-        } else if iter.peek() == Some(&'n') {
-            iter.next();
-            expect!('i');
-            expect!('l');
-            right = None;
-        } else {
-            return Err(String::from("Expected nil or ("));
-        }
-
-        expect!(')');
+        let right = match Self::parse_node_rec(iter) {
+            Ok(node) => node,
+            Err(err) => return Err(err),
+        };
 
         Ok(Box::new(Self {
             val: val,
@@ -112,14 +104,15 @@ impl Node {
 
     fn deserialize(string: &str) -> Result<Box<Self>, String> {
         let mut iter = string.chars().peekable();
-        Self::deserialize_rec(&mut iter)
+        Self::parse_node(&mut iter)
     }
 }
 
+#[cfg(test)]
 mod tests {
+    use super::Node;
     #[test]
     fn test_serialize() {
-        use super::Node;
         let root = Node {
             val: String::from("root"),
             left: Some(Box::new(Node {
@@ -137,10 +130,14 @@ mod tests {
         };
         assert_eq!(
             root.serialize(),
-            "(\"root\" (\"left\" (\"left.left\" nil nil) nil) (\"right\" nil nil))"
+            "\"root\" \"left\" \"left.left\" ? ? ? \"right\" ? ?"
         );
+    }
+
+    #[test]
+    fn test_deserialize() {
         assert_eq!(
-            Node::deserialize(&root.serialize())
+            Node::deserialize("\"root\" \"left\" \"left.left\" ? ? ? \"right\" ? ?")
                 .unwrap()
                 .left
                 .unwrap()
