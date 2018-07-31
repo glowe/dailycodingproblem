@@ -114,17 +114,17 @@ mod tests {
     #[test]
     fn test_serialize() {
         let root = Node {
-            val: String::from("root"),
+            val: "root".to_string(),
             left: Some(Box::new(Node {
-                val: String::from("left"),
+                val: "left".to_string(),
                 left: Some(Box::new(Node {
-                    val: String::from("left.left"),
+                    val: "left.left".to_string(),
                     ..Default::default()
                 })),
                 ..Default::default()
             })),
             right: Some(Box::new(Node {
-                val: String::from("right"),
+                val: "right".to_string(),
                 ..Default::default()
             })),
         };
