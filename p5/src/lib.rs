@@ -1,8 +1,8 @@
-fn car<T: Copy>(pair: Box<Fn(&Fn(T, T) -> T) -> T>) -> T {
+fn car<T>(pair: Box<Fn(&Fn(T, T) -> T) -> T>) -> T {
     pair(&|a, _| a)
 }
 
-fn cdr<T: Copy>(pair: Box<Fn(&Fn(T, T) -> T) -> T>) -> T {
+fn cdr<T>(pair: Box<Fn(&Fn(T, T) -> T) -> T>) -> T {
     pair(&|_, b| b)
 }
 
