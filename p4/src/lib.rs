@@ -36,13 +36,15 @@ fn find_smallest_missing_positive_int_nlogn(numbers: &mut [i32]) -> Option<u32> 
 fn find_smallest_missing_positive_int_linear(numbers: &mut [i32]) -> Option<u32> {
     let max = numbers.len();
 
-    // Move all of the non-positives out of consideration
+    // Shift non-positive numbers out of consideration. We know that the largest
+    // number must be max, so make them biger than that.
     for n in numbers.iter_mut() {
         if *n <= 0 {
-            *n = (max as i32) + 1;
+            *n = (max + 1) as i32;
         }
     }
 
+    // Flip the sign for items in the array according to numbers that we encounter.
     for i in 0..numbers.len() {
         let n = numbers[i].abs() as usize;
         assert!(n > 0);
@@ -51,12 +53,12 @@ fn find_smallest_missing_positive_int_linear(numbers: &mut [i32]) -> Option<u32>
         }
     }
 
-    for i in 0..numbers.len() {
-        if numbers[i] > 0 {
-            return Some((i + 1) as u32);
-        }
-    }
-    None
+    // The index + 1 of the first positive number we enounter is the smallest
+    // missing number.
+    numbers
+        .into_iter()
+        .position(|n| *n > 0)
+        .map(|n| (n + 1) as u32)
 }
 
 #[cfg(test)]
