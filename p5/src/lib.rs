@@ -1,12 +1,15 @@
-fn car(pair: Box<Fn(&Fn(u32, u32) -> u32) -> u32>) -> u32 {
+fn car<T: Copy>(pair: Box<Fn(&Fn(T, T) -> T) -> T>) -> T {
     pair(&|a, _| a)
 }
 
-fn cdr(pair: Box<Fn(&Fn(u32, u32) -> u32) -> u32>) -> u32 {
+fn cdr<T: Copy>(pair: Box<Fn(&Fn(T, T) -> T) -> T>) -> T {
     pair(&|_, b| b)
 }
 
-fn cons(x: u32, y: u32) -> Box<Fn(&Fn(u32, u32) -> u32) -> u32> {
+fn cons<T: 'static>(x: T, y: T) -> Box<Fn(&Fn(T, T) -> T) -> T>
+where
+    T: Copy,
+{
     Box::new(move |func| func(x, y))
 }
 
