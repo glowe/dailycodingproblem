@@ -20,10 +20,12 @@ mod tests {
     #[test]
     fn test_car() {
         assert_eq!(car(cons(3, 4)), 3);
+        assert_eq!(car(cons("car", "cdr")), "car");
     }
 
     #[test]
     fn test_cdr() {
         assert_eq!(cdr(cons(3, 4)), 4);
+        assert_eq!(cdr(cons("car", "cdr")), "cdr");
     }
 }
