@@ -19,6 +19,18 @@ struct node {
     node* next;
 };
 
+static node* node_new(const int value) {
+    node* node = calloc(1, sizeof(node));
+    node->value = value;
+    assert(node->next == NULL);
+    return node;
+}
+
+static void node_free(node* node) {
+    node->next = NULL;
+    free(node);
+}
+
 struct list {
     uint64_t size;
     node* head;
@@ -48,8 +60,7 @@ void list_empty(list* list) {
     node* curr = list->head;
     while (curr != NULL) {
         node* next = curr->next;
-        curr->next = NULL;
-        free(curr);
+        node_free(curr);
         curr = next;
     }
     list->size = 0;
@@ -60,18 +71,6 @@ void list_empty(list* list) {
 void list_free(list* list) {
     list_empty(list);
     free(list);
-}
-
-node* node_new(const int value) {
-    node* node = calloc(1, sizeof(node));
-    node->value = value;
-    assert(node->next == NULL);
-    return node;
-}
-
-void node_free(node* node) {
-    node->next = NULL;
-    free(node);
 }
 
 void list_insert(list* list, const int value, const int index) {
