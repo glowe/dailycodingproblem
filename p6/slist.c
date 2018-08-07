@@ -31,6 +31,10 @@ static void node_free(node* node) {
     free(node);
 }
 
+void node_print(const node* node) {
+    printf("address: %p, value: %llu, next: %p\n", node, node->value, node->next);
+}
+
 struct list {
     uint64_t size;
     node* head;
@@ -153,20 +157,23 @@ void list_foreach(const list* list, void fn(const node*)) {
 }
 
 void list_reverse(list* list) {
-    // recursive
-
-}
-
-void node_print(const node* node) {
-    printf("address: %p, value: %llu, next: %p\n", node, node->value, node->next);
-}
-
-int main(int argc, char *argv[]) {
-    list* list = list_new();
-    for (int i = 0; i < 1000000; i++) {
-        list_insert(list, i, 0);
+    const uint64_t size = list_size(list);
+    node* curr = NULL;
+    while (!list_is_empty(list)) {
+        node* head = list_pop(list);
+        head->next = curr;
+        curr = head;
     }
-    list_foreach(list, node_print);
-    list_free(list);
-    return 0;
+    list->head = curr;
+    list->size = size; 
+}
+
+list* list_reversed(const list* _list) {
+    list* rev = list_new();
+    node* curr = _list->head;
+    while (curr != NULL) {
+        list_push(rev, curr->value);
+        curr = curr->next;
+    }
+    return rev;
 }

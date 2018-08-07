@@ -1,5 +1,7 @@
 #ifndef LIST_H
 #define LIST_H
+#include <stdbool.h>
+#include <stdint.h>
 typedef struct node node;
 typedef struct list list;
 
@@ -22,4 +24,5 @@ node* list_pop(list* list);
 void list_empty(list* list);
 
 void list_reverse(list* list);
+list* list_reversed(const list* list);
 #endif

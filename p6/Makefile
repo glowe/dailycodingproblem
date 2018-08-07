@@ -1,9 +1,11 @@
 CC = clang
 CFLAGS = -Wall -std=c99
 
-slist: slist.c
+# FIXME: how do I make a different executable based on the output files
+# for example I want sldriver, dldriver
+driver: slist.o
 
 .PHONE: clean
 
 clean:
-	-rm *.o slist.o slist
+	-rm *.o sldriver
