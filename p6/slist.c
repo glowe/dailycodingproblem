@@ -19,20 +19,24 @@ struct node {
     node* next;
 };
 
+uint64_t node_value(const node* curr) {
+    return curr->value;
+}
+
 static node* node_new(const int value) {
-    node* node = calloc(1, sizeof(node));
-    node->value = value;
-    assert(node->next == NULL);
-    return node;
+    node* curr = calloc(1, sizeof(node));
+    curr->value = value;
+    assert(curr->next == NULL);
+    return curr;
 }
 
-static void node_free(node* node) {
-    node->next = NULL;
-    free(node);
+static void node_free(node* curr) {
+    curr->next = NULL;
+    free(curr);
 }
 
-void node_print(const node* node) {
-    printf("address: %p, value: %llu, next: %p\n", node, node->value, node->next);
+void node_print(const node* curr) {
+    printf("address: %p, value: %llu, next: %p\n", curr, curr->value, curr->next);
 }
 
 struct list {
@@ -40,137 +44,142 @@ struct list {
     node* head;
 };
 
-int64_t list_size(const list* list) {
-    return list->size;
+int64_t list_size(const list* lst) {
+    return lst->size;
 }
 
-bool list_is_empty(const list* list) {
-    return list->size == 0; 
+bool list_is_empty(const list* lst) {
+    return lst->size == 0; 
 }
 
 list* list_new() {
-    list* list = calloc(1, sizeof(list));
-    if (list == NULL) {
+    list* lst = calloc(1, sizeof(list));
+    if (lst == NULL) {
         return NULL;
     }
-    assert(list->size == 0);
-    return list;
+    assert(lst->size == 0);
+    return lst;
 }
 
-void list_empty(list* list) {
-    if (list_is_empty(list)) {
+void list_empty(list* lst) {
+    if (list_is_empty(lst)) {
         return;
     }
-    node* curr = list->head;
+    node* curr = lst->head;
     while (curr != NULL) {
         node* next = curr->next;
         node_free(curr);
         curr = next;
     }
-    list->size = 0;
-    list->head = NULL;
-    assert(list_is_empty(list));
+    lst->size = 0;
+    lst->head = NULL;
+    assert(list_is_empty(lst));
 }
 
-void list_free(list* list) {
-    list_empty(list);
-    free(list);
+void list_free(list* lst) {
+    list_empty(lst);
+    free(lst);
 }
 
-void list_insert(list* list, const int value, const int index) {
-    assert(list != NULL);
+void list_insert(list* lst, const int value, const int index) {
+    assert(lst != NULL);
     assert(0 <= index);
-    assert(index <= list_size(list));
-    const uint64_t original_size = list_size(list);
+    assert(index <= list_size(lst));
+    const uint64_t original_size = list_size(lst);
     node* const new = node_new(value);
-    node* curr = list->head;
-    for (int i = 0; i < index; i++) {
+    node* curr = lst->head;
+    for (uint64_t i = 0; i < index; i++) {
         curr = curr->next;
     }
     new->next = curr;
-    list->size += 1;
+    lst->size += 1;
     if (index == 0) {
-        list->head = new;
+        lst->head = new;
     }
-    assert(!list_is_empty(list));
-    assert(list_size(list) == original_size + 1);
+    assert(!list_is_empty(lst));
+    assert(list_size(lst) == original_size + 1);
 }
 
-void list_push(list* list, const int value) {
-    list_insert(list, value, 0);
+void list_push(list* lst, const int value) {
+    list_insert(lst, value, 0);
 }
 
-void list_append(list* list, const int value) {
-    list_insert(list, value, list_size(list));
+void list_append(list* lst, const int value) {
+    list_insert(lst, value, list_size(lst));
 }
 
-node* list_get(const list* list, const int index) {
-    assert(!list_is_empty(list));
+node* list_get(const list* lst, const int index) {
+    assert(!list_is_empty(lst));
     assert(0 <= index);
-    assert(index < list_size(list));
-    uint64_t i = index;
-    node* curr = list->head;
-    while (i > 0) {
+    assert(index < list_size(lst));
+    node* curr = lst->head;
+    for (uint64_t i = 0; i < index; i++) {
        curr = curr->next;
-       i--;
     }
     return curr;
 }
 
-node* list_remove(list* list, const int index) {
-    assert(!list_is_empty(list));
+node* list_remove(list* lst, const int index) {
+    assert(!list_is_empty(lst));
     assert(0 <= index);
-    assert(index < list_size(list));
+    assert(index < list_size(lst));
     // Special case removing the head
     if (index == 0) {
-        node* curr = list->head;
-        list->head = curr->next;
-        list->size--;
+        node* curr = lst->head;
+        lst->head = curr->next;
+        lst->size--;
         return curr;
     }
-    uint64_t i = index;
-    node* prev = list->head;
+    node* prev = lst->head;
     node* curr = prev->next;
-    while (i > 1) {
+    for (uint64_t i = 1; i < index; i++) {
         prev = curr;
         curr = curr->next;
-        i--;
     }
     prev->next = curr == NULL ? NULL : curr->next;
-    list->size--;
+    lst->size--;
     return curr;
 }
 
-node* list_pop(list* list) {
-    return list_remove(list, 0);
+node* list_pop(list* lst) {
+    return list_remove(lst, 0);
 }
 
-void list_foreach(const list* list, void fn(const node*)) {
-    if (list_is_empty(list)) {
+void list_foreach(const list* lst, void fn(const node*)) {
+    if (list_is_empty(lst)) {
         return;
     }
-    node* curr = list->head;
+    node* curr = lst->head;
     while (curr != NULL) {
         fn(curr);
         curr = curr->next;
     }
 }
 
-void list_reverse(list* list) {
-    const uint64_t size = list_size(list);
+void list_foreach_reversed(const list* lst, void fn(const node*)) {
+    if (list_is_empty(lst)) {
+        return;
+    }
+    list* rev = list_reversed(lst);
+    list_foreach(rev, fn);
+    list_free(rev);
+}
+
+void list_reverse(list* lst) {
+    const uint64_t size = list_size(lst);
     node* curr = NULL;
-    while (!list_is_empty(list)) {
-        node* head = list_pop(list);
+    while (!list_is_empty(lst)) {
+        node* head = list_pop(lst);
         head->next = curr;
         curr = head;
     }
-    list->head = curr;
-    list->size = size; 
+    lst->head = curr;
+    lst->size = size; 
 }
 
-list* list_reversed(const list* _list) {
+list* list_reversed(const list* lst) {
     list* rev = list_new();
-    node* curr = _list->head;
+    node* curr = lst->head;
     while (curr != NULL) {
         list_push(rev, curr->value);
         curr = curr->next;
