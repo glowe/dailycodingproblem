@@ -235,12 +235,9 @@ void list_empty(list* lst) {
 }
 
 void list_reverse(list* lst) {
-    const uint64_t size = list_size(lst);
-    for (int i = 0; i < size; i++) {
-        node* head = list_pop(lst);
-        list_append(lst, head->value);
-        node_free(head);
-    }
+    node* tail = lst->tail;
+    lst->tail = lst->head;
+    lst->head = tail;
 }
 
 list* list_reversed(const list* lst) {

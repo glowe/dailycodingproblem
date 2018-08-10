@@ -9,7 +9,7 @@ struct node {
     node* next;
 };
 
-static node* node_new(const int value) {
+static node* node_new(const uint64_t value) {
     node* new = calloc(1, sizeof(node));
     new->value = value;
     assert(new->next == NULL);
@@ -60,7 +60,7 @@ bool list_is_empty(const list* lst) {
     return list_size(lst) == 0;
 }
 
-node* list_get(const list* lst, const int index) {
+node* list_get(const list* lst, const uint64_t index) {
     assert(!list_is_empty(lst));
     assert(index >= 0);
     assert(index < list_size(lst));
@@ -102,8 +102,8 @@ void list_foreach_reversed(const list* lst, void fn(const node*)) {
      fn(head);
 }
 
-void list_insert(list* lst, const int value, const int index) {
-    assert(index <= 0);
+void list_insert(list* lst, const uint64_t value, const uint64_t index) {
+    assert(0 <= index);
     assert(index <= list_size(lst));
     if (index == 0) {
         node* new_head = node_new(value);
@@ -117,37 +117,34 @@ void list_insert(list* lst, const int value, const int index) {
             lst->tail = new_head;
         }
         lst->size++;
-        return;
-    }
-    if (index == list_size(lst) - 1) {
+    } else if (index == list_size(lst) - 1) {
         node* new_tail = node_new(value);
         node* old_tail = lst->tail;
         old_tail->next = new_tail;
         new_tail->prev = old_tail;
         lst->tail = new_tail;
         lst->size++;
-        return;
+    } else {
+        node* curr = list_get(lst, index);
+        node* prev = curr->prev;
+        node* new = node_new(value);
+        new->next = curr;
+        curr->prev = new;
+        new->prev = prev;
+        prev->next = new;
+        lst->size++;
     }
-
-    node* curr = list_get(lst, index);
-    node* prev = curr->prev;
-    node* new = node_new(value);
-    new->next = curr;
-    curr->prev = new;
-    new->prev = prev;
-    prev->next = new;
-    lst->size++;
 }
 
-void list_push(list* lst, const int value) {
+void list_push(list* lst, const uint64_t value) {
     list_insert(lst, value, 0);
 }
 
-void list_append(list* lst, const int value) {
+void list_append(list* lst, const uint64_t value) {
     list_insert(lst, value, list_size(lst) - 1);
 }
 
-node* list_remove(list* lst, const int index) {
+node* list_remove(list* lst, const uint64_t index) {
     assert(!list_is_empty(lst));
     // special case head
     if (index == 0) {
