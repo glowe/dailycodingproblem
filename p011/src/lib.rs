@@ -14,20 +14,20 @@ speed up queries.
 */
 use std::collections::{HashMap, HashSet};
 
-fn strings_with_prefix<'a>(prefix: &str, strings: &'a [&str]) -> HashSet<&'a str> {
-    strings
+fn strings_with_prefix<'a>(prefix: &str, dictionary: &'a [&str]) -> HashSet<&'a str> {
+    dictionary
         .to_vec()
         .into_iter()
         .filter(|string| string.starts_with(prefix))
         .collect()
 }
 
-fn strings_with_prefix_using_trie(prefix: &str, strings: &[&str]) -> HashSet<String> {
+fn strings_with_prefix_using_trie(prefix: &str, dictionary: &[&str]) -> HashSet<String> {
     let mut set = TrieSet::new();
-    for word in strings {
+    for word in dictionary {
         set.insert(&word);
     }
-    set.words_starting_with(prefix)
+    set.strings_starting_with(prefix)
 }
 
 #[derive(Debug)]
@@ -51,9 +51,11 @@ impl TrieSet {
         }
     }
 
-    fn insert(&mut self, word: &str) {
+    fn insert(&mut self, string: &str) {
         let mut node = &mut self.root;
-        for c in word.chars() {
+        for c in string.chars() {
+            // See http://bluss.github.io/rust/fun/2015/10/11/stuff-the-identity-function-does/
+            // for an explanation of what moving does.
             node = moving(node).chars.entry(c).or_insert(Node {
                 terminates: false,
                 chars: HashMap::new(),
@@ -62,9 +64,9 @@ impl TrieSet {
         node.terminates = true;
     }
 
-    fn contains(&self, word: &str) -> bool {
+    fn contains(&self, string: &str) -> bool {
         let mut node = &self.root;
-        for c in word.chars() {
+        for c in string.chars() {
             match node.chars.get(&c) {
                 None => return false,
                 Some(next) => node = next,
@@ -73,7 +75,7 @@ impl TrieSet {
         node.terminates
     }
 
-    pub fn words_starting_with(&self, prefix: &str) -> HashSet<String> {
+    pub fn strings_starting_with(&self, prefix: &str) -> HashSet<String> {
         let mut node = &self.root;
         for c in prefix.chars() {
             match node.chars.get(&c) {
@@ -81,20 +83,20 @@ impl TrieSet {
                 Some(next) => node = next,
             }
         }
-        let mut words = HashSet::new();
-        self.collect_words(&node, prefix, &mut words);
-        words
+        let mut strings = HashSet::new();
+        self.collect_strings(&node, prefix, &mut strings);
+        strings
     }
 
-    fn collect_words(&self, node: &Node, prefix: &str, words: &mut HashSet<String>) {
+    fn collect_strings(&self, node: &Node, prefix: &str, strings: &mut HashSet<String>) {
         if node.terminates {
-            words.insert(String::from(prefix));
+            strings.insert(String::from(prefix));
         }
         for (c, child_node) in &node.chars {
             // Traverse each branch now
             let mut prefix = String::from(prefix);
             prefix.push(*c);
-            self.collect_words(&child_node, &prefix, words);
+            self.collect_strings(&child_node, &prefix, strings);
         }
     }
 }
