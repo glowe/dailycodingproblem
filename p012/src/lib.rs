@@ -52,14 +52,9 @@ fn staircase_permutations(choices: &[u8], sum: u8) -> usize {
 fn staircase_exponential(choices: &[u8], n: u8) -> u8 {
     if n == 0 {
         1
-    } else if choices.contains(&n) {
-        1 + choices
-            .iter()
-            .filter(|&&c| c < n)
-            .map(|&c| staircase_exponential(choices, n - c))
-            .sum::<u8>()
     } else {
-        choices
+        let incr = if choices.contains(&n) { 1 } else { 0 };
+        incr + choices
             .iter()
             .filter(|&&c| c < n)
             .map(|&c| staircase_exponential(choices, n - c))
