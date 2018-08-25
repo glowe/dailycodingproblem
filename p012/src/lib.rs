@@ -74,7 +74,7 @@ fn staircase_linear_x(choices: &[u8], n: u8) -> u8 {
     for i in 0..=n {
         cache[i] += choices
             .iter()
-            .filter(|&&c| i as i32 - c as i32 > 0)
+            .filter(|&&c| i > c as usize)
             .map(|&c| cache[i - c as usize])
             .sum::<u8>();
         if choices.contains(&(i as u8)) {
