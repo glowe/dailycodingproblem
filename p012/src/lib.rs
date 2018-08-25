@@ -55,32 +55,28 @@ fn staircase_exponential(choices: &[u8], n: u8) -> u8 {
     } else if choices.contains(&n) {
         1 + choices
             .iter()
-            .filter(|c| **c < n)
-            .map(|c| staircase_exponential(choices, n - *c))
+            .filter(|&&c| c < n)
+            .map(|&c| staircase_exponential(choices, n - c))
             .sum::<u8>()
     } else {
         choices
             .iter()
-            .filter(|c| **c < n)
-            .map(|c| staircase_exponential(choices, n - *c))
+            .filter(|&&c| c < n)
+            .map(|&c| staircase_exponential(choices, n - c))
             .sum::<u8>()
     }
 }
 
 fn staircase_linear_x(choices: &[u8], n: u8) -> u8 {
     let n: usize = n as usize;
-    let mut cache = Vec::with_capacity(n + 1);
-    for _ in 0..=n {
-        cache.push(0);
-    }
+    let mut cache = vec![0; n + 1];
     cache[0] = 1;
     for i in 0..=n {
-        for c in choices {
-            let index: i32 = i as i32 - *c as i32;
-            if index > 0 {
-                cache[i] += cache[index as usize];
-            }
-        }
+        cache[i] += choices
+            .iter()
+            .filter(|&&c| i as i32 - c as i32 > 0)
+            .map(|&c| cache[i - c as usize])
+            .sum::<u8>();
         if choices.contains(&(i as u8)) {
             cache[i] += 1;
         }
