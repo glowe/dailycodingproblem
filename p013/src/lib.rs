@@ -20,11 +20,11 @@ fn longest_substring_linear(s: &str, k: usize) -> &str {
     let mut best = (0, 0);
     for (i, ch) in s.chars().enumerate() {
         chars.insert(ch);
+        current.1 = i + 1;
         if chars.len() > k {
             chars.remove(&s.chars().nth(current.0).unwrap());
             current.0 += 1;
         }
-        current.1 = i + 1;
         if distance(current) > distance(best) {
             best = current;
         }
