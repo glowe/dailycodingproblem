@@ -10,7 +10,7 @@ Hint: The basic equation of a circle is x2 + y2 = r2.
 #![feature(non_ascii_idents)]
 extern crate rand;
 extern crate rayon;
-use rand::random;
+use rand::{thread_rng, Rng};
 use rayon::prelude::*;
 
 fn estimate_π(iterations: u64) -> f64 {
@@ -18,8 +18,9 @@ fn estimate_π(iterations: u64) -> f64 {
     let points_in_circle: f64 = (0..iterations)
         .into_par_iter()
         .filter_map(|_| {
-            let x = random::<f64>();
-            let y = random::<f64>();
+            let mut rng = thread_rng();
+            let x = rng.gen::<f64>();
+            let y = rng.gen::<f64>();
             let dist = (x * x + y * y).sqrt();
             if dist <= 1.0 {
                 Some(1.0)
