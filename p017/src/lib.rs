@@ -44,6 +44,9 @@ The name of a file contains at least a period and an extension.
 The name of a directory or sub-directory will not contain a period.
 */
 use std::cmp;
+use std::error::Error as StdError;
+use std::fmt;
+use std::str::FromStr;
 // Seems like a tree-based problem
 
 fn count_leading_tabs(name: &str) -> usize {
@@ -57,17 +60,46 @@ struct Dir {
     subdirs: Vec<Dir>,
 }
 
-// Implement parse
-impl Dir {
-    fn from(spec: &str) -> Self {
-        let lines: Vec<&str> = spec.lines().collect();
-        Self::parse(&lines, 0)
-    }
+#[derive(Debug, Clone)]
+enum ParseFilesystemError {
+    Empty,
+    UnexpectedIndent,
+}
 
-    fn parse(lines: &Vec<&str>, depth: usize) -> Self {
+impl fmt::Display for ParseFilesystemError {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        self.description().fmt(f)
+    }
+}
+
+impl StdError for ParseFilesystemError {
+    fn description(&self) -> &str {
+        match self {
+            ParseFilesystemError::Empty => "cannot parse filesystem from emptpy string",
+            ParseFilesystemError::UnexpectedIndent => "indent level does not match expectation",
+        }
+    }
+}
+
+impl FromStr for Dir {
+    type Err = ParseFilesystemError;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        let lines: Vec<&str> = s.lines().collect();
+        if lines.len() == 0 {
+            return Err(ParseFilesystemError::Empty);
+        }
+        Self::parse_recur(&lines, 0)
+    }
+}
+
+impl Dir {
+    fn parse_recur(lines: &Vec<&str>, depth: usize) -> Result<Self, ParseFilesystemError> {
         let name = lines[0];
         let leading_tabs = count_leading_tabs(name);
-        assert_eq!(count_leading_tabs(name), depth);
+        if leading_tabs != depth {
+            return Err(ParseFilesystemError::UnexpectedIndent);
+        }
         let mut dir = Dir {
             name: name.chars().skip(depth).collect(),
             files: vec![],
@@ -85,14 +117,14 @@ impl Dir {
             if name.contains(".") {
                 dir.files.push(name.chars().skip(depth + 1).collect());
             } else {
-                dir.subdirs
-                    .push(Self::parse(&lines[i..].to_vec(), depth + 1));
+                let subdir = Self::parse_recur(&lines[i..].to_vec(), depth + 1)?;
+                dir.subdirs.push(subdir);
             }
         }
-        dir
+        Ok(dir)
     }
 
-    fn longest_path_len(&self) -> usize {
+    pub fn longest_path_len(&self) -> usize {
         let max_files_len = self
             .files
             .iter()
@@ -144,9 +176,8 @@ mod tests {
                 },
             ],
         };
-        // TODO: this should really be a parse and return a Result
-        let parsed = Dir::from("dir\n\tsubdir1\n\t\tfile1.ext\n\t\tsubsubdir1\n\tsubdir2\n\t\tsubsubdir2\n\t\t\tfile2.ext");
-        assert_eq!(filesystem, parsed);
+        let parsed = "dir\n\tsubdir1\n\t\tfile1.ext\n\t\tsubsubdir1\n\tsubdir2\n\t\tsubsubdir2\n\t\t\tfile2.ext".parse();
+        assert_eq!(filesystem, parsed.unwrap());
         assert_eq!(filesystem.longest_path_len(), 32);
     }
 }
