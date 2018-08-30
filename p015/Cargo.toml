@@ -1,0 +1,8 @@
+[package]
+name = "p015"
+version = "0.1.0"
+authors = ["Graham Lowe <graham.lowe@gmail.com>"]
+
+[dependencies]
+kolmogorov_smirnov = "1.1.0"
+rand = "0.5.5"
