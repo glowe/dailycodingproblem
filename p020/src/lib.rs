@@ -15,37 +15,83 @@ struct List {
     head: Option<Rc<Node>>,
 }
 
+impl List {
+    fn len(&self) -> usize {
+        if self.is_empty() {
+            0
+        } else {
+            Node::len(&self.head)
+        }
+    }
+
+    fn is_empty(&self) -> bool {
+        self.head.is_none()
+    }
+}
+
 #[derive(Debug)]
 struct Node {
     value: u64,
     next: Option<Rc<Node>>,
 }
 
-fn find_intersecting_node<'b>(a: &Rc<Node>, b: &'b Option<Rc<Node>>) -> Option<&'b Rc<Node>> {
-    match b {
-        None => return None,
-        Some(rc) => {
-            if Rc::ptr_eq(a, rc) {
-                return Some(rc);
-            } else {
-                return find_intersecting_node(a, &rc.next);
+impl Node {
+    fn len(next: &Option<Rc<Node>>) -> usize {
+        let mut i = 0;
+        let mut n = next;
+        while n.is_some() {
+            i += 1;
+            n = &n.as_ref().unwrap().next;
+        }
+        i
+    }
+
+    fn skip(next: &Option<Rc<Node>>, skip: usize) -> &Option<Rc<Self>> {
+        if next.is_none() {
+            return next;
+        }
+        let mut next = next;
+        for _ in 0..skip {
+            next = &next.as_ref().unwrap().next;
+            if next.is_none() {
+                break;
             }
         }
+        next
     }
 }
 
 fn find_intersection<'b>(a: &List, b: &'b List) -> Option<&'b Rc<Node>> {
-    if a.head.is_none() {
+    if a.is_empty() || b.is_empty() {
         return None;
     }
-    let mut next = &a.head;
-    while next.is_some() {
-        let next_rc = next.as_ref().unwrap();
-        let intersection = find_intersecting_node(&next_rc, &b.head);
-        if intersection.is_some() {
-            return intersection;
+
+    let mut node_a = &a.head;
+    let mut node_b = &b.head;
+
+    // Discard prefix of longer list.
+    let len_a = Node::len(node_a);
+    let len_b = Node::len(node_b);
+    if len_a > len_b {
+        let n = len_a - len_b;
+        node_a = Node::skip(node_a, n);
+    } else if len_b > len_a {
+        let n = len_b - len_a;
+        node_a = Node::skip(node_b, n);
+    }
+
+    // Compare suffixes
+    let len = len_a.min(len_b);
+    for _ in 0..len {
+        let rc_a = node_a.as_ref().unwrap();
+        let rc_b = node_b.as_ref().unwrap();
+        if Rc::ptr_eq(&rc_a, &rc_b) {
+            // We return rc_b since we are using lifetime 'b
+            return Some(rc_b);
         }
-        next = &next_rc.next;
+        // Advance both nodes
+        node_a = Node::skip(node_a, 1);
+        node_b = Node::skip(node_b, 1);
     }
     None
 }
@@ -71,6 +117,7 @@ mod tests {
                 })),
             })),
         };
+        assert_eq!(a.len(), 4);
         let b = List {
             head: Some(Rc::new(Node {
                 value: 99,
@@ -80,6 +127,7 @@ mod tests {
                 })),
             })),
         };
+        assert_eq!(b.len(), 4);
         // Verify that we are sharing the same node
         assert!(Rc::ptr_eq(
             &a.head
