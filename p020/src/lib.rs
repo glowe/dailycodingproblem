@@ -130,24 +130,8 @@ mod tests {
         assert_eq!(b.len(), 4);
         // Verify that we are sharing the same node
         assert!(Rc::ptr_eq(
-            &a.head
-                .as_ref()
-                .unwrap()
-                .next
-                .as_ref()
-                .unwrap()
-                .next
-                .as_ref()
-                .unwrap(),
-            &b.head
-                .as_ref()
-                .unwrap()
-                .next
-                .as_ref()
-                .unwrap()
-                .next
-                .as_ref()
-                .unwrap()
+            &Node::skip(&a.head, 2).as_ref().unwrap(),
+            &Node::skip(&b.head, 2).as_ref().unwrap()
         ));
         let intersection = find_intersection(&a, &b);
         assert!(Rc::ptr_eq(intersection.unwrap(), &c));
